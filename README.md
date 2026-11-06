@@ -19,7 +19,7 @@ Obsidian is a secure, full-stack biometrics and performance tracking dashboard d
 ## ⚙️ Local Installation
 1. **Clone the repository:**
    \`\`\`bash
-   git clone https://github.com/YourUsername/obsidian-performance.git
+   git clone [https://github.com/YourUsername/obsidian-performance.git](https://github.com/RageKxller07/obsidian-performance)
    cd obsidian-performance
    \`\`\`
 
