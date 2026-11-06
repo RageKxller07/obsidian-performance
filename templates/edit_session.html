@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>OBSIDIAN® | EDIT SESSION</title>
+    <link rel="icon" type="image/jpeg" href="{{ url_for('static', filename='app logo design.jpg') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+    /* Background Slideshow Styling */
+    html, body { margin: 0; padding: 0; width: 100%; min-height: 100vh; overflow-x: hidden; }
+    .auth-bg { position: fixed; inset: 0; z-index: 0; }
+    .auth-bg-slide {
+        position: absolute; inset: 0;
+        background-size: cover; background-position: center;
+        opacity: 0; transform: scale(1);
+        transition: opacity 1.8s ease-in-out, transform 0s linear 1.8s;
+    }
+    .auth-bg-slide.active {
+        opacity: 1; transform: scale(1.1); z-index: 1;
+        transition: opacity 1.8s ease-in-out, transform 8s linear;
+    }
+    .auth-overlay {
+        position: fixed; inset: 0;
+        background: rgba(5, 5, 5, 0.45); /* Much lighter overlay so images shine through */
+        backdrop-filter: blur(1px); z-index: 2;
+    }
+    /* Ensure Navbar and Container sit above background */
+    .navbar, .container { position: relative; z-index: 3; }
+    .container { padding: 40px 20px; }
+
+    /* High-Transparency Glassmorphism */
+    .card {
+        background: rgba(10, 10, 10, 0.55) !important; /* Low opacity (55%) for high transparency */
+        backdrop-filter: blur(6px); /* Frosted blur to keep text readable */
+        border: 1px solid rgba(204, 255, 0, 0.3) !important;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+    }
+    
+    .history-table-wrapper {
+        background: rgba(5, 5, 5, 0.4) !important;
+        backdrop-filter: blur(4px);
+    }
+
+    .obsidian-table th {
+        background: rgba(15, 15, 15, 0.6) !important;
+    }
+
+    .obsidian-table td {
+        background: transparent !important;
+    }
+</style>
+</head>
+<body>
+    <!-- Background Slideshow -->
+    <div class="auth-bg">
+        <div class="auth-bg-slide active" style="background-image: url('{{ url_for('static', filename='img1.jpg') }}')"></div>
+        <div class="auth-bg-slide" style="background-image: url('{{ url_for('static', filename='img2.jpg') }}')"></div>
+        <div class="auth-bg-slide" style="background-image: url('{{ url_for('static', filename='img3.jpg') }}')"></div>
+        <div class="auth-bg-slide" style="background-image: url('{{ url_for('static', filename='img4.jpg') }}')"></div>
+    </div>
+    <div class="auth-overlay"></div>
+
+    <nav class="navbar">
+        <div class="brand-group">
+            <img src="{{ url_for('static', filename='app logo design.jpg') }}" alt="OBSIDIAN Logo" class="brand-logo-img">
+            <div class="brand-text">
+                <span class="logo">OBSIDIAN®</span>
+                <span class="brand-sub">PERFORMANCE LABS</span>
+            </div>
+        </div>
+        <div class="nav-right">
+            <a href="{{ url_for('my_sessions') }}" class="btn-neon" style="padding: 8px 16px; margin: 0; width: auto; font-size: 0.8rem; background: #222; color: #fff; text-decoration: none;">CANCEL EDIT</a>
+        </div>
+    </nav>
+
+    <div class="container" style="display: block; max-width: 600px; margin: 0 auto;">
+        <div class="card">
+            <h2 class="section-title">EDIT SESSION</h2>
+            <p style="color: var(--text-muted); margin-bottom: 20px;">Updating log recorded on {{ session.timestamp[:16] }}</p>
+            
+            <form action="{{ url_for('edit_session', session_id=session.id) }}" method="POST">
+                
+                <div class="form-group">
+                    <label>Athlete Name:</label>
+                    <input type="text" name="name" value="{{ session.athlete_name }}" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>Activity Type:</label>
+                    <select name="activity" id="activity" style="display: block; width: 100%; border: 2px solid var(--border); padding: 12px; background: var(--bg-dark); color: #fff; font-family: 'Inter', sans-serif; text-transform: uppercase;" onchange="toggleFields()">
+                        <option value="Sprint" {% if session.activity_type == 'Sprint' %}selected{% endif %}>Sprint</option>
+                        <option value="Endurance" {% if session.activity_type == 'Endurance' %}selected{% endif %}>Endurance</option>
+                        <option value="Strength" {% if session.activity_type == 'Strength' %}selected{% endif %}>Strength</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Avg Heart Rate (BPM):</label>
+                    <input type="number" name="hr" value="{{ session.avg_hr or '' }}" step="1" required>
+                </div>
+
+                <div class="form-group">
+                    <label>RPE Score (1-10):</label>
+                    <input type="number" name="rpe" value="{{ session.rpe or '' }}" step="0.1" required>
+                </div>
+
+                <!-- Sprint -->
+                <div id="sprint-fields" class="dynamic-field">
+                    <div class="form-group">
+                        <label>Top Speed (km/h):</label>
+                        <input type="number" name="speed" value="{{ session.top_speed or '' }}" step="0.1">
+                    </div>
+                    <div class="form-group">
+                        <label>Duration (min):</label>
+                        <input type="number" name="duration" value="{{ session.duration or '' }}" step="0.1">
+                    </div>
+                </div>
+
+                <!-- Endurance -->
+                <div id="endurance-fields" class="dynamic-field">
+                    <div class="form-group">
+                        <label>Distance (km):</label>
+                        <input type="number" name="distance" value="{{ session.distance or '' }}" step="0.1">
+                    </div>
+                    <div class="form-group">
+                        <label>Duration (min):</label>
+                        <input type="number" name="duration_endurance" value="{{ session.duration or '' }}" step="0.1">
+                    </div>
+                </div>
+
+                <!-- Strength -->
+                <div id="strength-fields" class="dynamic-field">
+                    <div class="form-group">
+                        <label>Exercise Name:</label>
+                        <input type="text" name="exercise" value="{{ session.exercise_name or '' }}">
+                    </div>
+                    <div class="form-group">
+                        <label>Weight (kg):</label>
+                        <input type="number" name="weight" value="{{ session.weight or '' }}" step="0.5">
+                    </div>
+                    <div class="form-group">
+                        <label>Sets:</label>
+                        <input type="number" name="sets" value="{{ session.sets or '' }}" step="1">
+                    </div>
+                    <div class="form-group">
+                        <label>Reps:</label>
+                        <input type="number" name="reps" value="{{ session.reps or '' }}" step="1">
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-neon">CONFIRM UPDATES ↗</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Slideshow Animation Script
+        const slides = document.querySelectorAll('.auth-bg-slide');
+        let current = 0;
+        setInterval(() => {
+            slides[current].classList.remove('active');
+            current = (current + 1) % slides.length;
+            slides[current].classList.add('active');
+        }, 5000);
+
+        function toggleFields() {
+            const activity = document.getElementById("activity").value;
+            document.getElementById("sprint-fields").style.display = activity === "Sprint" ? "block" : "none";
+            document.getElementById("endurance-fields").style.display = activity === "Endurance" ? "block" : "none";
+            document.getElementById("strength-fields").style.display = activity === "Strength" ? "block" : "none";
+        }
+        document.addEventListener('DOMContentLoaded', toggleFields);
+    </script>
+</body>
+</html>

@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>OBSIDIAN® | MY SESSIONS</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="icon" type="image/jpeg" href="{{ url_for('static', filename='app logo design.jpg') }}">
+    <style>
+    /* Background Slideshow Styling */
+    html, body { margin: 0; padding: 0; width: 100%; min-height: 100vh; overflow-x: hidden; }
+    .auth-bg { position: fixed; inset: 0; z-index: 0; }
+    .auth-bg-slide {
+        position: absolute; inset: 0;
+        background-size: cover; background-position: center;
+        opacity: 0; transform: scale(1);
+        transition: opacity 1.8s ease-in-out, transform 0s linear 1.8s;
+    }
+    .auth-bg-slide.active {
+        opacity: 1; transform: scale(1.1); z-index: 1;
+        transition: opacity 1.8s ease-in-out, transform 8s linear;
+    }
+    .auth-overlay {
+        position: fixed; inset: 0;
+        background: rgba(5, 5, 5, 0.45); /* Much lighter overlay so images shine through */
+        backdrop-filter: blur(1px); z-index: 2;
+    }
+    /* Ensure Navbar and Container sit above background */
+    .navbar, .container { position: relative; z-index: 3; }
+    .container { padding: 40px 20px; }
+
+    /* High-Transparency Glassmorphism */
+    .card {
+        background: rgba(10, 10, 10, 0.55) !important; /* Low opacity (55%) for high transparency */
+        backdrop-filter: blur(6px); /* Frosted blur to keep text readable */
+        border: 1px solid rgba(204, 255, 0, 0.3) !important;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+    }
+    
+    .history-table-wrapper {
+        background: rgba(5, 5, 5, 0.4) !important;
+        backdrop-filter: blur(4px);
+    }
+
+    .obsidian-table th {
+        background: rgba(15, 15, 15, 0.6) !important;
+    }
+
+    .obsidian-table td {
+        background: transparent !important;
+    }
+</style>
+</head>
+<body>
+    <!-- Background Slideshow -->
+    <div class="auth-bg">
+        <div class="auth-bg-slide active" style="background-image: url('{{ url_for('static', filename='ses1.jpg') }}')"></div>
+        <div class="auth-bg-slide" style="background-image: url('{{ url_for('static', filename='ses2.jpg') }}')"></div>
+        <div class="auth-bg-slide" style="background-image: url('{{ url_for('static', filename='ses3.jpg') }}')"></div>
+        <div class="auth-bg-slide" style="background-image: url('{{ url_for('static', filename='ses4.jpg') }}')"></div>
+    </div>
+    <div class="auth-overlay"></div>
+
+    <nav class="navbar">
+        <div class="brand-group">
+            <img src="{{ url_for('static', filename='app logo design.jpg') }}" alt="OBSIDIAN Logo" class="brand-logo-img">
+            <div class="brand-text">
+                <span class="logo">OBSIDIAN®</span>
+                <span class="brand-sub">PERFORMANCE LABS</span>
+            </div>
+        </div>
+        <div class="nav-right">
+            <a href="/" class="btn-neon" style="padding: 8px 16px; margin: 0; width: auto; font-size: 0.8rem; text-decoration: none;">BACK TO DASHBOARD</a>
+        </div>
+    </nav>
+
+    <div class="container" style="display: block; max-width: 1200px; margin: 0 auto;">
+        <div class="card">
+            <h2 class="section-title">MY SESSION LOGS</h2>
+            <p style="color: var(--text-muted); margin-bottom: 20px;">Manage and audit your historical training data.</p>
+            
+            <div class="history-table-wrapper">
+                <table class="obsidian-table">
+                    <thead>
+                        <tr>
+                            <th>DATE</th>
+                            <th>ATHLETE</th>
+                            <th>DISCIPLINE</th>
+                            <th>HEART RATE</th>
+                            <th>RPE</th>
+                            <th>ACTIONS</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for session in sessions %}
+                        <tr>
+                            <td class="col-date">{{ session.timestamp[:16] }}</td>
+                            <td class="col-highlight">{{ session.athlete_name }}</td>
+                            <td><span class="badge-discipline">{{ session.activity_type }}</span></td>
+                            <td class="col-hr">{{ session.avg_hr | int }} BPM</td>
+                            <td><span class="badge-rpe">{{ session.rpe }}</span></td>
+                            <td>
+                                <div style="display: flex; gap: 10px; align-items: center;">
+                                    <a href="{{ url_for('edit_session', session_id=session.id) }}" style="border: 1px solid var(--neon); color: var(--neon); padding: 4px 10px; border-radius: 4px; text-decoration: none; font-size: 0.7rem; font-weight: bold; transition: all 0.2s ease;">EDIT</a>
+                                    <form action="{{ url_for('delete_session', session_id=session.id) }}" method="POST" style="margin: 0;" onsubmit="return confirm('Permanently delete this session?');">
+                                        <button type="submit" style="background: transparent; border: 1px solid var(--error-red); color: var(--error-red); padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 0.7rem; font-weight: bold; transition: all 0.2s ease;">DELETE</button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="6" style="text-align: center; padding: 20px; color: var(--text-muted);">NO SESSIONS LOGGED YET.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Slideshow Animation Script
+        const slides = document.querySelectorAll('.auth-bg-slide');
+        let current = 0;
+        setInterval(() => {
+            slides[current].classList.remove('active');
+            current = (current + 1) % slides.length;
+            slides[current].classList.add('active');
+        }, 5000);
+    </script>
+</body>
+</html>
